@@ -48,6 +48,14 @@ def test_login_unsuccessful_bad_password(test_client):
 
     test_client.get("/logout", follow_redirects=True)
 
+def test_login_blank_terms(test_client):
+    response = test_client.post(
+        "/login", data=dict(email="", password=""), follow_redirects=True
+    )
+
+    assert response.request.path == url_for("auth.login"), "Login was unsuccessful"
+
+    test_client.get("/logout", follow_redirects=True)
 
 def test_signup_user_no_name(test_client):
     response = test_client.post(
@@ -117,3 +125,21 @@ def test_service_create_with_profile_fail_no_password(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
+
+
+def test_user_count_increments_when_new_profile(clean_database):
+
+    assert UserRepository().count() == 0
+    assert UserProfileRepository().count() == 0
+
+    data = {
+        "name": "Test",
+        "surname": "Foo",
+        "email": "service_test@example.com",
+        "password": "test1234"
+    }
+
+    AuthenticationService().create_with_profile(**data)
+
+    assert UserRepository().count() == 1
+    assert UserProfileRepository().count() == 1
